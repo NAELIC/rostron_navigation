@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'aStar'
+package_name = 'navigation'
 
 setup(
     name=package_name,
@@ -20,9 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'aStar_to_ros = aStar.aStar_to_ros:main',
-            'MoveTo = aStar.MoveTo:main',
-
+        	'striker = navigation.striker:main',
+            'ball_position = navigation.ball_position:main',
+            'move_to = navigation.move_to:main',
         ],
     },
 )

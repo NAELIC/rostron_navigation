@@ -45,13 +45,8 @@ class MoveTo(Node):
         # [cos(θ) -sin(θ)]   [x]
         # [sin(θ)  cos(θ)] * [y]
         return( cos(theta)*x - sin(theta)*y , sin(theta)*x+cos(theta)*y )
-    
-    def quaternion_to_yaw(self, x, y, z, w):
-        t1 = +2.0 * (w * z + x * y)
-        t2 = +1.0 - 2.0 * (y * y + z * z)
-        yaw_z = math.atan2(t1, t2)
-        return yaw_z 
-
+   
+    # faire fonction qui prends une liste de points et arriveX arriveY dernier point
     def order_robot(self, ArriveX, ArriveY):
 
         global poseRobots
@@ -60,8 +55,7 @@ class MoveTo(Node):
         # 1. récupérer: position et orientation courante du robot + position d'arrivé les deux étant dans le repère du terrain
         robotX = robotIdPose.position.x
         robotY = robotIdPose.position.y
-        robotO = robotIdPose.orientation
-        robotO = self.quaternion_to_yaw(robotO.x,robotO.y,robotO.z, robotO.w)
+        robotO = robotIdPose.orientation.z
 
         # 2. calculer le vecteur allant de la position du robot à la position d'arrivée
         vecteur = (ArriveX-robotX, ArriveY-robotY)
@@ -79,21 +73,9 @@ class MoveTo(Node):
         vel_msg = Twist()
         vel_msg.linear.x= vecteur[0]
         vel_msg.linear.y= vecteur[1] 
-        vel_msg.linear.z = 0.0
-        vel_msg.angular.x = 0.0
-        vel_msg.angular.y = 0.0
-        vel_msg.angular.z = 0.0
-
-        hardware_msg = Hardware()
-        hardware_msg.spin_power=0.0
-        hardware_msg.kick_type=0
-        hardware_msg.kick_power=0.0
-
         msg = Order()
         msg.id = 0
         msg.velocity = vel_msg
-        msg.hardware = hardware_msg
-        
         self.publisher.publish(msg)
 
 def main(args=None):

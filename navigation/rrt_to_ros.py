@@ -55,7 +55,7 @@ def main(args=None):
         path = dijkstra(G)
 
         #Transform path with squares in path with poses
-        for i in range(len(path))
+        for i in range(len(path)) : 
             path[i] = node_to_pose(path[i])
 
         # move to every poses of the path until end pos
