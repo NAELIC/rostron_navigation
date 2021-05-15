@@ -3,8 +3,8 @@
 <package format="3">
   <name>navigation</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="bedeux32@gmail.com">ubuntu</maintainer>
+  <description>Navigation System for SSL Robot</description>
+  <maintainer email="contact@etienne-schmitz.com">Etienne SCHMITZ</maintainer>
   <license>TODO: License declaration</license>
 
   <test_depend>ament_copyright</test_depend>
