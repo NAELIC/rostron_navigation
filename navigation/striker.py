@@ -1,3 +1,12 @@
+"""
+Même chose que les précédents.
+Cette fonction n'a pas sa place ici, mais dans rostron_ia_ms (dans un premier temps).
+Néanmoins on peut faire des actions Kick, ChipKick.
+
+J'ai pas regardé en détail.
+Mais en gros évite les globals, utilise numpy
+Les recopies de fonctions...
+"""
 from rostron_ia_ms.utils.world import World
 import math
 from math import sin, cos, pi

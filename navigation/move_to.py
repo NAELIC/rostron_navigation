@@ -1,3 +1,8 @@
+"""
+    Suppression de noeud
+    Certains imports sont useless (World)
+
+"""
 from rostron_ia_ms.utils.world import World
 import math
 from math import sin, cos, pi
@@ -32,6 +37,9 @@ class MoveTo(Node):
         poseRobots = robots
         return robots
 
+    """
+        Utilisation de numpy !
+    """
     def normeVecteur (self, x, y):
         return math.sqrt( x**2 + y**2 )
 
@@ -41,11 +49,19 @@ class MoveTo(Node):
     def distance (self, x, y, xa, ya):
         return math.sqrt(((xa-x)**2)+((ya-y)**2))
 
+
+    """
+        Regarder tf de ros....
+        Numpy propose sinon quelque chose dans cette veine !
+    """
     def matriceRotation(self, x ,y, theta):
         # [cos(θ) -sin(θ)]   [x]
         # [sin(θ)  cos(θ)] * [y]
         return( cos(theta)*x - sin(theta)*y , sin(theta)*x+cos(theta)*y )
-   
+    
+    """
+        Global alors qu'on est dans une classe ?
+    """
     # faire fonction qui prends une liste de points et arriveX arriveY dernier point
     def order_robot(self, ArriveX, ArriveY):
 
@@ -88,6 +104,10 @@ def main(args=None):
     robotX = poseRobots.robots[0].pose.position.x
     robotY = poseRobots.robots[0].pose.position.y
 
+    """
+        path hardcodé ?
+        On utilise pas astar. 
+    """
     path = [(1.0,1.0),(1.0,2.0),(2.0,2.0),(1.5,1.5),(1.0,0.8),(0.0,0.0),(-0.1,0.0),(-0.2,0.0),(-0.3,0.0),(-0.3,0.1), (-0.3,0.2), (-0.3,0.3), (-0.4,0.3), (-0.5,0.3), (-0.6,0.3), (-0.7,0.3)]
     
     for pose in path:

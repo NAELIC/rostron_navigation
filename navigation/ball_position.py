@@ -4,6 +4,9 @@ from rclpy.node import Node
 from rostron_interfaces.msg import Ball
 from std_msgs.msg import String
 
+"""
+Ce noeud ROS sert à quoi ?
+"""
 
 class BallPosition(Node):
     poseBall = Ball()

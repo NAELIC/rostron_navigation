@@ -8,6 +8,11 @@ def manhattan_distance(a, b):
 def euclidian_distance(a, b):
     return math.sqrt((a.position[0] - b.position[0])**2 + (a.position[1] - b.position[1])**2)
 
+
+"""
+Nom mal choisi !
+Trop proche de ROS.
+"""
 class Node:
     """
     //A node class for A* Pathfinding
@@ -36,6 +41,10 @@ class Node:
         return self.f > other.f
 
 """
+Code mort ?
+"""
+
+"""
 Init grid.
 0 = empty, 1 = starting point, 2 = ending point (arrival)
 """
@@ -58,6 +67,17 @@ def return_path(current_node):
         current = current.parent
     return path[::-1]  # Return reversed path
 
+"""
+    print : Utilisation du système de log
+    https://github.com/ros2/examples/blob/master/rclpy/services/minimal_client/examples_rclpy_minimal_client/client.py
+    
+    Faut avoir le noeud stocké quelques part (via node de la classe world ?)
+
+    On a besoin de définir le noeud fin ?
+
+    En lisant l'algorithme je le trouve verbeux. 
+    Je pense qu'on n'a pas besoin de définir les adjacent squares
+"""
 def a_star(maze):
     for i in range(len(maze)):
         for j in range(len(maze[i])):
@@ -137,10 +157,12 @@ def a_star(maze):
             # Add the child to the open list
             heapq.heappush(open_list, child)
 
+    # Use logging system
     print("Couldn't get a path to destination")
     return None
 
-
+# Non !
 path = a_star(maze)
 
+# Non !
 print(path)
