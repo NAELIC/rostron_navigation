@@ -1,0 +1,2 @@
+class Primitive():
+    pass
