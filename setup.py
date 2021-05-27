@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'navigation = navigation.main:main'
+            'navigation = navigation.main:main',
+            'vizualisation = navigation.rviz_vizualisation:main'
         ],
     },
 )

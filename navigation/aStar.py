@@ -53,8 +53,6 @@ maze = [[0, 1, 0, 0, 0],
         [0, 0, 0, -1, -1],
         [0, 0, 0, -1, 2],
         [0, 0, 0, 0, 0]]
-no_rows = 4
-no_cols = 5
 #for i in maze :
     #print(i)
 
@@ -86,7 +84,7 @@ def a_star(maze):
                 start_node = Node(None, (i,j))
                 start_node.g = start_node.h = start_node.f = 0
             if maze[i][j]==2:
-                #print(f"({i},{j}) est le noeud d'arrivée")
+                print(f"({i},{j}) est le noeud d'arrivée")
                 end_node = Node(None, (i,j))
                 end_node.g = end_node.h = end_node.f = 0
 
@@ -121,9 +119,9 @@ def a_star(maze):
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
 
             # Make sure within range (check if within maze boundary)
-            if (node_position[0] > (no_rows - 1) or 
+            if (node_position[0] > (len(maze) - 1) or 
                 node_position[0] < 0 or 
-                node_position[1] > (no_cols -1) or 
+                node_position[1] > (len(maze[i]) -1) or 
                 node_position[1] < 0) :
                 continue
 
@@ -162,7 +160,7 @@ def a_star(maze):
     return None
 
 # Non !
-path = a_star(maze)
+#path = a_star(maze)
 
 # Non !
-print(path)
+#print(path)

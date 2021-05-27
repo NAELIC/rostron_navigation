@@ -3,7 +3,6 @@
     Certains imports sont useless (World)
 
 """
-from rostron_ia_ms.utils.world import World
 import math
 from math import sin, cos, pi
 import numpy as np
@@ -13,13 +12,14 @@ from rclpy.node import Node
 
 from geometry_msgs.msg import Twist
 
-from rostron_interfaces.msg import Robot, Robots
-from rostron_interfaces.msg import Order, Hardware
+from .aStar_to_ros import get_path_a_star
+from .rviz_vizualisation import RvizVizualisation
 
-import time
+from rostron_interfaces.msg import Robots
+from rostron_interfaces.msg import Order
 
-class MoveTo(Node):
-    poseRobots= Robots()
+class MoveToStrategie(Node):
+    #poseRobots= Robots()
     def __init__(self):
         super().__init__("move_to")
         self.subscription = self.create_subscription(
@@ -29,12 +29,11 @@ class MoveTo(Node):
             1
         )
         self.subscription
-        
+        self.poseRobots = Robots()
         self.publisher = self.create_publisher(Order,'/yellow/order', 1)
 
     def listener_robots(self, robots):
-        global poseRobots
-        poseRobots = robots
+        self.poseRobots = robots
         return robots
 
     """
@@ -59,71 +58,70 @@ class MoveTo(Node):
         # [sin(θ)  cos(θ)] * [y]
         return( cos(theta)*x - sin(theta)*y , sin(theta)*x+cos(theta)*y )
     
-    """
-        Global alors qu'on est dans une classe ?
-    """
     # faire fonction qui prends une liste de points et arriveX arriveY dernier point
-    def order_robot(self, ArriveX, ArriveY):
+    def order_robot(self, id, path):
+        for pose in path:
+            rclpy.spin_once(self)
+            robotIdPose = self.poseRobots.robots[id].pose # Robot 0
 
-        global poseRobots
-        robotIdPose = poseRobots.robots[0].pose # Robot 0
+            ArriveX=pose[0]
+            ArriveY=pose[1]
 
-        # 1. récupérer: position et orientation courante du robot + position d'arrivé les deux étant dans le repère du terrain
-        robotX = robotIdPose.position.x
-        robotY = robotIdPose.position.y
-        robotO = robotIdPose.orientation.z
+            # 1. récupérer: position et orientation courante du robot + position d'arrivé les deux étant dans le repère du terrain
+            robotX = robotIdPose.position.x
+            robotY = robotIdPose.position.y
+            robotO = robotIdPose.orientation.z
 
-        # 2. calculer le vecteur allant de la position du robot à la position d'arrivée
-        vecteur = (ArriveX-robotX, ArriveY-robotY)
+            # 2. calculer le vecteur allant de la position du robot à la position d'arrivée
+            vecteur = (ArriveX-robotX, ArriveY-robotY)
         
-        # 3. créer une matrice de rotation anti-horaire correspondant à l'orientation du robot
-        # 4. appliquer cette matrice sur le vecteur
-        vecteur = self.matriceRotation(vecteur[0],vecteur[1],robotO)
+            # 3. créer une matrice de rotation anti-horaire correspondant à l'orientation du robot
+            # 4. appliquer cette matrice sur le vecteur
+            vecteur = self.matriceRotation(vecteur[0],vecteur[1],robotO)
 
-        # 5. limiter la vitesse du robot en limitant la norme du vecteur, si norm(vec) > MAX_SPEED alors on normalise vec
-        """
-        MAX_SPEED= 5.5
-        if self.normeVecteur(vecteur[0], vecteur[1]) > MAX_SPEED : 
-            vecteur = self.normaliserVecteur(vecteur)
-        """
-        vel_msg = Twist()
-        vel_msg.linear.x= vecteur[0]
-        vel_msg.linear.y= vecteur[1] 
+            # 5. limiter la vitesse du robot en limitant la norme du vecteur, si norm(vec) > MAX_SPEED alors on normalise vec
+            """
+            MAX_SPEED= 5.5
+            if self.normeVecteur(vecteur[0], vecteur[1]) > MAX_SPEED : 
+                vecteur = self.normaliserVecteur(vecteur)
+            """
+            robotX = self.poseRobots.robots[id].pose.position.x
+            robotY = self.poseRobots.robots[id].pose.position.y
+            while self.distance(robotX, robotY, ArriveX, ArriveY)>0.1:
+                rclpy.spin_once(self) # get current poseRobots
+                robotX = self.poseRobots.robots[id].pose.position.x
+                robotY = self.poseRobots.robots[id].pose.position.y
+                if self.distance(robotX, robotY, ArriveX, ArriveY)>0.3 or pose==path[-1]:
+                    vecteur = (ArriveX-robotX, ArriveY-robotY)
+                    vecteur = self.matriceRotation(vecteur[0],vecteur[1],robotO)
+                vel_msg = Twist()
+                vel_msg.linear.x= vecteur[0]
+                vel_msg.linear.y= vecteur[1]
+                msg = Order()
+                msg.id = id
+                msg.velocity = vel_msg
+                self.publisher.publish(msg)
+        self.stop_robot(id)
+
+
+    def stop_robot(self, id):
         msg = Order()
-        msg.id = 0
-        msg.velocity = vel_msg
+        msg.id = id
+        msg.velocity = Twist()
         self.publisher.publish(msg)
+        
 
-def main(args=None):
-    rclpy.init(args=args)
+    def move_to(self, id, finalPose):
+        rclpy.spin_once(self)
 
-    move_to = MoveTo()
+        path= get_path_a_star(id,finalPose)
+        self.order_robot(id, path)
 
-    rclpy.spin_once(move_to)
-    global poseRobots
-    robotX = poseRobots.robots[0].pose.position.x
-    robotY = poseRobots.robots[0].pose.position.y
+        rviz = RvizVizualisation()
+        rviz.get_rviz_vizualisation(path)
 
-    """
-        path hardcodé ?
-        On utilise pas astar. 
-    """
-    path = [(1.0,1.0),(1.0,2.0),(2.0,2.0),(1.5,1.5),(1.0,0.8),(0.0,0.0),(-0.1,0.0),(-0.2,0.0),(-0.3,0.0),(-0.3,0.1), (-0.3,0.2), (-0.3,0.3), (-0.4,0.3), (-0.5,0.3), (-0.6,0.3), (-0.7,0.3)]
-    
-    for pose in path:
-        ArriveX = pose[0]
-        ArriveY = pose[1]
-        print("Destination :",ArriveX, ArriveY)
-        while move_to.distance(robotX, robotY, ArriveX, ArriveY)>0.1:
-            rclpy.spin_once(move_to) # get current poseRobots
-            robotX = poseRobots.robots[0].pose.position.x
-            robotY = poseRobots.robots[0].pose.position.y
-            move_to.order_robot(ArriveX, ArriveY)
-        print("Destination OK")
+        self.destroy_node()
 
-
-    move_to.destroy_node()
-    rclpy.shutdown()
-       
 if __name__ == '__main__':
-    main()
+    pass
+    # main()

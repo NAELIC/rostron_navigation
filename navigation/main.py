@@ -35,7 +35,6 @@ class Navigation(Node):
 def main(args=None):
     rclpy.init(args=args)
     id = 0
-
     navigation = Navigation(id)
 
     rclpy.spin(navigation)
