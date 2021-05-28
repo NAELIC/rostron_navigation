@@ -3,12 +3,16 @@ from rclpy.node import Node
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped
 
-from std_msgs.msg import String
-
-# On Rviz2 : Add a new display (Ctrl+N) and choose Path
-# Rename the topic name : 'yellow/order'
 class RvizVizualisation(Node):
+    """
+    ## Goal
+    With rviz, you can see trajectories of robots, the location of other robots and the map
 
+    ## Integration 
+    - In a new terminal (after launching ros), launch rviz with the command : rviz2
+    - On Rviz2 : Add a new display (Ctrl+N) and choose Path then Confirm
+    - In the new section Path : Rename the topic name in  'yellow/path'
+    """
     def __init__(self):
         super().__init__('rviz_vizualisation')
         self.publisher_ = self.create_publisher(Path, '/yellow/path', 10)
