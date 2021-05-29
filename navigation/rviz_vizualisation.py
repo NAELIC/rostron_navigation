@@ -28,7 +28,7 @@ class RvizVizualisation(Node):
             msg.pose.position.y = pose[1]
             goal_msg.poses.append(msg)
         self.publisher_.publish(goal_msg)
-        rclpy.spin(self)
+        rclpy.spin_once(self)
 
 if __name__ == '__main__':
     #main()

@@ -1,6 +1,7 @@
 import heapq
 import math
 
+import time
 
 def manhattan_distance(a, b):
     return abs(a.position[0] - b.position[0]) + abs(a.position[1] - b.position[1])
@@ -40,23 +41,6 @@ class Node:
     def __gt__(self, other):
         return self.f > other.f
 
-"""
-Code mort ?
-"""
-
-"""
-Init grid.
-0 = empty, 1 = starting point, 2 = ending point (arrival)
-"""
-#maze = [[0, 0, 2], [0, 0, 0], [0, 0, 1]]
-maze = [[0, 1, 0, 0, 0],
-        [0, 0, 0, -1, -1],
-        [0, 0, 0, -1, 2],
-        [0, 0, 0, 0, 0]]
-#for i in maze :
-    #print(i)
-
-
 def return_path(current_node):
     path = []
     current = current_node
@@ -77,17 +61,19 @@ def return_path(current_node):
     Je pense qu'on n'a pas besoin de définir les adjacent squares
 """
 def a_star(maze):
+    start_time= time.time()
+    print("Path generation by aStar...")
+
     for i in range(len(maze)):
         for j in range(len(maze[i])):
             if maze[i][j]==1:
-                print(f"({i},{j}) est le noeud de départ")
+                #print(f"({i},{j}) est le noeud de départ")
                 start_node = Node(None, (i,j))
                 start_node.g = start_node.h = start_node.f = 0
             if maze[i][j]==2:
-                print(f"({i},{j}) est le noeud d'arrivée")
+                #print(f"({i},{j}) est le noeud d'arrivée")
                 end_node = Node(None, (i,j))
                 end_node.g = end_node.h = end_node.f = 0
-
     # Initialize both open and closed list
     open_list = []
     closed_list = []
@@ -108,6 +94,7 @@ def a_star(maze):
 
         # Found the goal ?
         if current_node == end_node:
+            print("A* execution time : ",time.time()-start_time," sec")
             return return_path(current_node)
 
          # Generate children
@@ -158,9 +145,3 @@ def a_star(maze):
     # Use logging system
     print("Couldn't get a path to destination")
     return None
-
-# Non !
-#path = a_star(maze)
-
-# Non !
-#print(path)
