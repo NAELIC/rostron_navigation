@@ -3,6 +3,8 @@ from rclpy.action import ActionServer
 from rclpy.node import Node
 
 from rostron_interfaces.action import MoveTo
+from rostron_utils.world import World
+
 
 from .primitive.move_to import MoveToPrimitive
 
