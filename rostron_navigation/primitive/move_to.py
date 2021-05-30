@@ -3,25 +3,30 @@ import math
 import rclpy
 from rclpy.action.server import ServerGoalHandle
 from rclpy.node import Node
-from geometry_msgs.msg import Pose, Twist
+from geometry_msgs.msg import Point
 from rostron_interfaces.action import MoveTo
 from rostron_interfaces.msg import Robots, Order
+from rostron_utils.world import World
 
 from .primitive import Primitive
 from ..path_planning.aStar_to_ros import AStar
 from ..rviz_vizualisation import RvizVizualisation
+
 
 class MoveToPrimitive(Primitive):
     def __init__(self, id: int) -> None:
         super().__init__()
         self.id = id
 
-    def handler_callback(self, goal_handle : ServerGoalHandle) -> None:
+    def handler_callback(self, goal_handle: ServerGoalHandle) -> None:
+        pose : Point = goal_handle.request.position
+        orientation : float = goal_handle.request.orientation
+        World().node_.get_logger().info('[MOVETO] - Executing MoveTo (%.2lf, %.2lf, %.2lf)' % (
+            pose.x, pose.y, orientation))
         # self.node.get_logger().info('Executing MoveTo goal...')
-        pose : Pose = goal_handle.request.pose
         # self.node.get_logger().info('%lf' % pose.position.x)
         # print("Destination :", (pose.position.x,pose.position.y))
-            
+
         # robot = MoveToStrategie()
         # a = AStar(self.id,(pose.position.x,pose.position.y), 0.0)
         # path= a.run()
@@ -29,7 +34,7 @@ class MoveToPrimitive(Primitive):
 
         # RvizVizualisation().get_rviz_vizualisation(path)
 
-        goal_handle.succeed()    
+        goal_handle.succeed()
         result = MoveTo.Result()
         return result
 
@@ -62,7 +67,7 @@ class MoveToPrimitive(Primitive):
 #         # [cos(θ) -sin(θ)]   [x]
 #         # [sin(θ)  cos(θ)] * [y]
 #         return( cos(theta)*x - sin(theta)*y , sin(theta)*x+cos(theta)*y )
-    
+
 #     def move_to(self, id, path):
 #         """Move to the last pose of the path going through all poses"""
 #         for pose in path:
@@ -79,7 +84,7 @@ class MoveToPrimitive(Primitive):
 
 #             # 2. calculer le vecteur allant de la position du robot à la position d'arrivée
 #             vecteur = (ArriveX-robotX, ArriveY-robotY)
-        
+
 #             # 3. créer une matrice de rotation anti-horaire correspondant à l'orientation du robot
 #             # 4. appliquer cette matrice sur le vecteur
 #             vecteur = self.matriceRotation(vecteur[0],vecteur[1],robotO)
@@ -91,7 +96,7 @@ class MoveToPrimitive(Primitive):
 #                 rclpy.spin_once(self) # get current poseRobots
 #                 robotX = self.poseRobots.robots[id].pose.position.x
 #                 robotY = self.poseRobots.robots[id].pose.position.y
-               
+
 #                 if self.distance(robotX, robotY, ArriveX, ArriveY)>0.3 or pose==path[-1]:
 #                     # solution pour que le robot ne s'arrête pas à chaque pose
 #                     # à 30cm de sa destination il garde le même vecteur et donc ne ralentit pas

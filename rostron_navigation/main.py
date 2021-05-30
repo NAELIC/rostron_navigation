@@ -23,14 +23,11 @@ class Navigation(Node):
         self.create_move_to()
 
         self.get_logger().info(
-            'Finish all action')
+            'Finish to init all action and service')
 
     def create_move_to(self):
         self.get_logger().info(
             'Init MoveTo primitive for the robot %d' % self.id)
-        self.get_logger().info(
-            'Init MoveTo')
-
         mt = MoveToPrimitive(self.id)
 
         self._action_server = ActionServer(
@@ -38,8 +35,6 @@ class Navigation(Node):
             MoveTo,
             'move_to',
             mt.handler_callback)
-        self.get_logger().info(
-            'finish init')
 
 
 def main(args=None):
