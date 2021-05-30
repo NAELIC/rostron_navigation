@@ -21,7 +21,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'navigation = navigation.main:main',
+            'navigation = rostron_navigation.main:main',
             ],
     },
 )
