@@ -3,7 +3,7 @@ from rclpy.action import ActionServer
 from rclpy.node import Node
 
 from rostron_interfaces.action import MoveTo
-from rostron_utils.world import World
+from rostron_utils.world import World, WorldWaitable
 
 
 from .primitive.move_to import MoveToPrimitive
@@ -13,7 +13,6 @@ class Navigation(Node):
 
     def __init__(self, id: int) -> None:
         super().__init__('navigation')
-
         self.id = id
 
         # Create all action and service for the navigation system.
@@ -22,9 +21,16 @@ class Navigation(Node):
 
         self.create_move_to()
 
+        self.get_logger().info(
+            'Finish all action')
+
+
     def create_move_to(self):
         self.get_logger().info(
-            'Init Move To primitive for the robot %d' % self.id)
+            'Init MoveTo primitive for the robot %d' % self.id)
+        self.get_logger().info(
+            'Init MoveTo')
+
         mt = MoveToPrimitive(self.id, self)
 
         self._action_server = ActionServer(
@@ -32,13 +38,22 @@ class Navigation(Node):
             MoveTo,
             'move_to',
             mt.handler_callback)
+        self.get_logger().info(
+            'finish init')
+
 
 
 def main(args=None):
     rclpy.init(args=args)
     id = 0
     navigation = Navigation(id)
+    World().init(navigation)
+    navigation.get_logger().info('test')
 
+    # waitable = WorldWaitable(navigation)
+    # navigation.add_waitable(waitable)
+
+    # navigation.get_logger().info('test')
     rclpy.spin(navigation)
 
 
