@@ -1,6 +1,7 @@
 import heapq
 import math
 
+import time
 
 def manhattan_distance(a, b):
     return abs(a.position[0] - b.position[0]) + abs(a.position[1] - b.position[1])
@@ -8,6 +9,11 @@ def manhattan_distance(a, b):
 def euclidian_distance(a, b):
     return math.sqrt((a.position[0] - b.position[0])**2 + (a.position[1] - b.position[1])**2)
 
+
+"""
+Nom mal choisi !
+Trop proche de ROS.
+"""
 class Node:
     """
     //A node class for A* Pathfinding
@@ -35,21 +41,6 @@ class Node:
     def __gt__(self, other):
         return self.f > other.f
 
-"""
-Init grid.
-0 = empty, 1 = starting point, 2 = ending point (arrival)
-"""
-#maze = [[0, 0, 2], [0, 0, 0], [0, 0, 1]]
-maze = [[0, 1, 0, 0, 0],
-        [0, 0, 0, -1, -1],
-        [0, 0, 0, -1, 2],
-        [0, 0, 0, 0, 0]]
-no_rows = 4
-no_cols = 5
-#for i in maze :
-    #print(i)
-
-
 def return_path(current_node):
     path = []
     current = current_node
@@ -58,18 +49,31 @@ def return_path(current_node):
         current = current.parent
     return path[::-1]  # Return reversed path
 
+"""
+    print : Utilisation du système de log
+    https://github.com/ros2/examples/blob/master/rclpy/services/minimal_client/examples_rclpy_minimal_client/client.py
+    
+    Faut avoir le noeud stocké quelques part (via node de la classe world ?)
+
+    On a besoin de définir le noeud fin ?
+
+    En lisant l'algorithme je le trouve verbeux. 
+    Je pense qu'on n'a pas besoin de définir les adjacent squares
+"""
 def a_star(maze):
+    start_time= time.time()
+    print("Path generation by aStar...")
+
     for i in range(len(maze)):
         for j in range(len(maze[i])):
             if maze[i][j]==1:
-                print(f"({i},{j}) est le noeud de départ")
+                #print(f"({i},{j}) est le noeud de départ")
                 start_node = Node(None, (i,j))
                 start_node.g = start_node.h = start_node.f = 0
             if maze[i][j]==2:
                 #print(f"({i},{j}) est le noeud d'arrivée")
                 end_node = Node(None, (i,j))
                 end_node.g = end_node.h = end_node.f = 0
-
     # Initialize both open and closed list
     open_list = []
     closed_list = []
@@ -90,6 +94,7 @@ def a_star(maze):
 
         # Found the goal ?
         if current_node == end_node:
+            print("A* execution time : ",time.time()-start_time," sec")
             return return_path(current_node)
 
          # Generate children
@@ -101,9 +106,9 @@ def a_star(maze):
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
 
             # Make sure within range (check if within maze boundary)
-            if (node_position[0] > (no_rows - 1) or 
+            if (node_position[0] > (len(maze) - 1) or 
                 node_position[0] < 0 or 
-                node_position[1] > (no_cols -1) or 
+                node_position[1] > (len(maze[i]) -1) or 
                 node_position[1] < 0) :
                 continue
 
@@ -137,10 +142,6 @@ def a_star(maze):
             # Add the child to the open list
             heapq.heappush(open_list, child)
 
+    # Use logging system
     print("Couldn't get a path to destination")
     return None
-
-
-path = a_star(maze)
-
-print(path)

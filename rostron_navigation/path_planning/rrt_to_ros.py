@@ -1,3 +1,8 @@
+"""
+
+Code non fonctionnel => début de recherche sur le sujet
+
+"""
 #import RTT
 import math
 from rostron_ia_ms.utils.world import World
@@ -49,7 +54,7 @@ def main(args=None):
     n_iter = 200
     radius = 0.5
     stepSize = 0.7
-
+    """
     G = RRT_star(startpos, endpos, obstacles, n_iter, radius, stepSize)
     if G.success:
         path = dijkstra(G)
@@ -60,3 +65,4 @@ def main(args=None):
 
         # move to every poses of the path until end pos
         moveTo(path)
+    """
