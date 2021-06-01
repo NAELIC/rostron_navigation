@@ -41,23 +41,20 @@ class RvizVizualisation(Node):
     def get_rviz_map(self, grid : AStar):
         
         origin = Pose()
-        origin.position.x = -grid.width/2
-        origin.position.y = -grid.length/2
+        origin.position.x = -grid.width/2 -(grid.margin/2)*grid.resolution
+        origin.position.y = -grid.length/2 -(grid.margin/2)*grid.resolution
 
         metaData = MapMetaData()
-        metaData.height = int(grid.length/grid.resolution)
+        metaData.height = int(grid.margin+(grid.length/grid.resolution))
         metaData.resolution = grid.resolution
-        metaData.width = int(grid.width/grid.resolution)
+        metaData.width = int(grid.margin+(grid.width/grid.resolution))
         metaData.origin = origin
 
         goal_msg = OccupancyGrid()
         goal_msg.header.frame_id = 'map'
         goal_msg.info = metaData
         
-        #data = grid.create_1d_grid() 
-        #data = [ int(x) for x in data ]
-        data= np.zeros((math.ceil(grid.length / grid.resolution), math.ceil(grid.width / grid.resolution)))
-        data = data.flatten()
+        data = grid.create_1d_grid() 
         data = [ int(x) for x in data ]
         goal_msg.data= data
         self.publisher_map.publish(goal_msg)
