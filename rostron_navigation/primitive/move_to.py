@@ -1,3 +1,4 @@
+from ..rviz_vizualisation import RvizVizualisation
 from rclpy.action.server import ServerGoalHandle
 from geometry_msgs.msg import Point
 from rostron_interfaces.action import MoveTo
@@ -19,6 +20,7 @@ class MoveToPrimitive(Primitive):
 
         a = AStar(self.id, goal)
         a.run()
+        RvizVizualisation().get_rviz_map(a)
         
         goal_handle.succeed()
         result = MoveTo.Result()
