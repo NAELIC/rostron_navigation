@@ -1,57 +1,74 @@
-import math
-import numpy as np
+##############################################################################
 
-from rostron_interfaces.action import MoveTo
+# source : https://www.analytics-link.com/post/2018/09/14/applying-the-a-path-finding-algorithm-in-python-part-1-2d-square-grid 
+
+##############################################################################
+
+from typing import Any
+import numpy as np
+import heapq
+import time
 from rostron_utils.world import World
 
-# TODO(Etienne) Chercher un nom pour la classe mère
+ 
 class AStar():
 
-    def __init__(self, id: int, goal : MoveTo.Goal) -> None:
-        self.resolution = 0.1
-        self.margin = 2*2
-        self.width = World().field.width
-        self.length = World().field.length
+    def __init__(self, grid: Any,start_pose: tuple, final_pose : tuple) -> None:
+        self.grid = grid
+        self.start_pose = start_pose
+        self.final_pose = final_pose
 
-        self.x_ = math.ceil(self.width / self.resolution) + self.margin
-        self.y_ = math.ceil(self.length / self.resolution) + self.margin
-        
-        self.id_ = id
-        self.goal_ = goal
+    def heuristic(self, a, b):
+        return np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
+
+
+    def astar(self, array, start, goal):
+        neighbors = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
+        close_set = set()
+        came_from = {}
+        gscore = {start:0}
+        fscore = {start:self.heuristic(start, goal)}
+        oheap = []
+        heapq.heappush(oheap, (fscore[start], start))
     
-    def create_grid(self):
-        """ Create a 2D array of the map with obstacles (robot)"""
-        grid = np.zeros((self.y_, self.x_))
-        
-        # Obstacles
-        for i in range(6):
-            posA = self.pose_to_grid(World().allies[i].pose.position)
-            posO = self.pose_to_grid(World().opponents[i].pose.position)
-            if self.id_ != i :
-                grid[posA[0]][posA[1]]=1
-            grid[posO[0]][posO[1]]=1        
+        while oheap:
+            current = heapq.heappop(oheap)[1]
+            if current == goal:
+                data = []
+                while current in came_from:
+                    data.append(current)
+                    current = came_from[current]
+                return data
+            close_set.add(current)
+            for i, j in neighbors:
+                neighbor = current[0] + i, current[1] + j
+                tentative_g_score = gscore[current] + self.heuristic(current, neighbor)
+                if 0 <= neighbor[0] < array.shape[0]:
+                    if 0 <= neighbor[1] < array.shape[1]:                
+                        if array[neighbor[0]][neighbor[1]] == 1:
+                            continue
+                    else:
+                        # array bound y walls
+                        continue
+                else:
+                    # array bound x walls
+                    continue
 
-            adjacent_squares=[(0,0),(0,1),(1,0),(-1,0),(0,-1),(-1,-1),(1,1),(-1,1),(1,-1),(0,-2),(0,2),
-            (-2,0),(2,0),(2,-1),(2,1),(-2,1),(-2,-1),(-1,-2),(1,-2),(1,-2),(-1,2),(1,2)]
-            for adjacent in adjacent_squares:
-                if self.id_ != i :
-                    grid[posA[0]+adjacent[0]][posA[1]+adjacent[1]]=1
-                grid[posO[0]+adjacent[0]][posO[1]+adjacent[1]]=1
-        return grid
-
-    def create_1d_grid(self):
-        """ Return the grid in a 1D array"""
-        return (self.create_grid()).flatten()
-
-    def pose_to_grid(self,position) -> tuple:
-        """Transposes a real position to a position on the grid"""
-        return ( math.floor(((position.x + self.length/2)/self.resolution)+self.margin/2), 
-                math.floor(((position.y + self.width/2)/self.resolution)+self.margin/2))
-
-    def grid_to_pose(self, grid) -> tuple:
-        """Transpose a position in the grid into a real position"""
-        return ( -self.length/2 + self.resolution*grid[0]+(self.resolution/2) -(self.margin/2)*self.resolution, 
-                -self.width/2 + self.resolution*grid[1]+(self.resolution/2) -(self.margin/2)*self.resolution)
-
+                if neighbor in close_set and tentative_g_score >= gscore.get(neighbor, 0):
+                    continue
+    
+                if  tentative_g_score < gscore.get(neighbor, 0) or neighbor not in [i[1]for i in oheap]:
+                    came_from[neighbor] = current
+                    gscore[neighbor] = tentative_g_score
+                    fscore[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
+                    heapq.heappush(oheap, (fscore[neighbor], neighbor))
+        return False
+    
     def run(self):
-        self.create_grid()
+        start_time = time.time()
+        route = self.astar( self.grid, self.start_pose, self.final_pose)
+        route = route + [self.start_pose]
+        route = route[::-1]
+        World().node_.get_logger().info('[PATH] - Generation Time : %.2lf sec' % (
+            round(time.time()-start_time,3)))
+        return route

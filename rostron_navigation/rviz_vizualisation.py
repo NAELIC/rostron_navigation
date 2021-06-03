@@ -1,45 +1,36 @@
-from numpy.core.fromnumeric import transpose
 import rclpy
-from rclpy.node import Node
 from nav_msgs.msg import Path, OccupancyGrid, MapMetaData
 from geometry_msgs.msg import PoseStamped, Pose
-from .path_planning.a_star import AStar
+from rclpy.node import Node
+from .path_planning.path_finder import PathFinder
 
-import numpy as np
-import math
+from rostron_utils.world import World
 
 class RvizVizualisation(Node):
     """
-    ## Goal
-    With rviz, you can see trajectories of robots, the location of other robots and the map
-
-    ## Integration 
-    - In a new terminal (after launching ros), launch rviz with the command : rviz2
-    - On Rviz2 : Add a new display (Ctrl+N) and choose Path then Confirm
-    - In the new section Path : Rename the topic name in  'yellow/path'
-    - To see the map, do the same thing with the Map and the topic name 'yellow/map'
+    Rviz is a viewer, thanks to this, you can see trajectories of robots, the location of other robots and the map
     """
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__('rviz_vizualisation')
-        self.publisher_ = self.create_publisher(Path, '/yellow/path', 10)
-        self.publisher_map= self.create_publisher(OccupancyGrid, '/yellow/map', 10)
+        self.publisher_path = World().node_.create_publisher(Path, '/yellow/path', 10)
+        self.publisher_map= World().node_.create_publisher(OccupancyGrid, '/yellow/map', 10)
 
-    def get_rviz_vizualisation(self, path):
+    def get_rviz_path(self, path):
+        """Show the path on rviz"""
         goal_msg = Path()
         goal_msg.poses = []
         goal_msg.header.frame_id = 'map'
         for pose in path : 
             msg = PoseStamped()
             msg.header.frame_id = 'map'
-            msg.pose.position.x = pose[0]
-            msg.pose.position.y = pose[1]
+            msg.pose.position.x = -pose[1]
+            msg.pose.position.y = pose[0]
             goal_msg.poses.append(msg)
-        self.publisher_.publish(goal_msg)
+        self.publisher_path.publish(goal_msg)
         rclpy.spin_once(self)
         
-    
-    def get_rviz_map(self, grid : AStar):
-        
+    def get_rviz_map(self, grid : PathFinder ):
+        """Show the map and robots on the rviz map"""
         origin = Pose()
         origin.position.x = -grid.width/2 -(grid.margin/2)*grid.resolution
         origin.position.y = -grid.length/2 -(grid.margin/2)*grid.resolution
