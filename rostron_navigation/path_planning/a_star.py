@@ -65,10 +65,6 @@ class AStar():
         return False
     
     def run(self):
-        start_time = time.time()
         route = self.astar( self.grid, self.start_pose, self.final_pose)
-        route = route + [self.start_pose]
         route = route[::-1]
-        World().node_.get_logger().info('[PATH] - Generation Time : %.2lf sec' % (
-            round(time.time()-start_time,3)))
         return route

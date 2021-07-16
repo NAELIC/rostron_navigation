@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import time
 
 from rostron_interfaces.action import MoveTo
 from rostron_utils.world import World
@@ -53,9 +54,10 @@ class PathFinder():
                 self.width/2 - self.resolution*grid[1]-(self.resolution/2) + (self.margin/2)*self.resolution)     
 
     def run(self, path_finding_class):
-        """ The path_finding class in parameter must have 
+        """ The path_finding class in parameter must have
         * 3 arguments : grid, start and goal
         * a run method which return a path"""
+        start_time = time.time()
         grid = self.create_grid()
         start = self.pose_to_grid(World().allies[self.id_].pose.position)
         goal = self.pose_to_grid(self.goal_.position)
@@ -63,4 +65,6 @@ class PathFinder():
         path = path_finding.run()
         for i in range(len(path)):
             path[i] = self.grid_to_pose(path[i])
+        World().node_.get_logger().info('[PATH] - Generation Time : %.2lf ms' % (
+            round((time.time()-start_time)*1000,2)))
         return path

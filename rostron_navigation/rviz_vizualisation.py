@@ -1,6 +1,3 @@
-from typing import get_origin
-
-from numpy.core.numeric import count_nonzero
 import rclpy
 from nav_msgs.msg import Path, OccupancyGrid, MapMetaData, GridCells
 from geometry_msgs.msg import PoseStamped, Pose, Point
@@ -33,6 +30,7 @@ class RvizVizualisation(Node):
             goal_msg.poses.append(msg)
         self.publisher_path.publish(goal_msg)
         rclpy.spin_once(self)
+        self.destroy_node()
         
     def get_rviz_map(self, grid : PathFinder ):
         """Show the map and robots on the rviz map"""
@@ -55,6 +53,7 @@ class RvizVizualisation(Node):
         goal_msg.data= data
         self.publisher_map.publish(goal_msg)
         rclpy.spin_once(self)
+        self.destroy_node()
     
     def get_rviz_grid(self, grid : PathFinder):
         """Show the grid cell"""
