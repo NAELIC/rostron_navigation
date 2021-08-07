@@ -25,7 +25,7 @@ class MoveToPrimitive(Primitive):
         self._action_server = ActionServer(
             node, MoveTo, f'r_{id}/move_to', self.execute_callback)
 
-    def execute_callback(self, goal_handle) -> None:
+    def execute_callback(self, goal_handle : ServerGoalHandle) -> None:
         goal: MoveTo.Goal = goal_handle.request
 
         World().node_.get_logger().info('[MOVETO] - Executing MoveTo (%.2lf, %.2lf, %.2lf)' % (

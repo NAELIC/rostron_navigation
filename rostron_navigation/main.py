@@ -3,12 +3,7 @@ from rclpy.node import Node
 
 from rostron_utils.world import World
 
-
 from .primitive.move_to import MoveToPrimitive
-
-from rostron_ia_ms.strategies.goalkeeper import GoalKeeper
-from rostron_ia_ms.strategies.striker import Striker
-from rostron_ia_ms.strategies.dribbler import Dribbler
 
 
 class Navigation(Node):
@@ -25,8 +20,6 @@ class Navigation(Node):
         self.get_logger().info(
             f'Init actions and service for robot {self.id}')
 
-        # self.create_goalkeeper()
-        # self.create_dribbler()
         self.create_move_to()
 
         self.get_logger().info(
@@ -44,6 +37,7 @@ def main():
 
     navigation.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
