@@ -6,37 +6,14 @@ import time
 import rclpy
 from rostron_interfaces.msg import Order, Hardware
 from geometry_msgs.msg import Twist
-from rclpy.action.server import ServerGoalHandle
 from rostron_interfaces.action import MoveTo
 from rclpy.node import Node
 from rostron_utils.world import World
-from rclpy.action import ActionServer
 
 from .primitive import Primitive
 from ..path_planning.path_finder import PathFinder
 from ..path_planning.a_star import AStar
 from ..rviz_vizualisation import RvizVizualisation
-
-
-class MoveToPrimitive(Primitive):
-    def __init__(self, id: int, node: Node) -> None:
-        super().__init__()
-        self.id = id
-        self._action_server = ActionServer(
-            node, MoveTo, f'r_{id}/move_to', self.execute_callback)
-
-    def execute_callback(self, goal_handle : ServerGoalHandle) -> None:
-        goal: MoveTo.Goal = goal_handle.request
-
-        World().node_.get_logger().info('[MOVETO] - Executing MoveTo (%.2lf, %.2lf, %.2lf)' % (
-            goal.position.x, goal.position.y, goal.orientation))
-
-        robot = MoveToStrategie(self.id)
-        robot.move_to((goal.position.x, goal.position.y), goal.orientation)
-        goal_handle.succeed()
-        result = MoveTo.Result()
-        return result
-
 
 """
 /!\ Below this line, the code needs to be removed ! /!\ 
