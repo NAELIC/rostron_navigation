@@ -1,5 +1,6 @@
 import math
 from math import sin, cos
+import matplotlib.pyplot as plt 
 import numpy as np
 import time
 
@@ -46,6 +47,8 @@ class MoveToStrategie(Node):
         self.robot_orientation = World().allies[self.id].pose.orientation.z
         self.loop_period = 0.06  # 60ms
         self.rviz = False
+        self.current_location=(self.robot_position, time.time())
+        self.speed_over_time=[[0.0,0.0]] #  [[speed,time],...]
         World().init(self)
 
     def update_pose_robot(self):
@@ -162,6 +165,9 @@ class MoveToStrategie(Node):
 
         path_finder = PathFinder(self.id, goal)
         path = path_finder.run(AStar)
+
+        self.speed_checker()
+
         if self.rviz:
             RvizVizualisation().get_rviz_path(path)
             RvizVizualisation().get_rviz_map(path_finder)
@@ -208,3 +214,28 @@ class MoveToStrategie(Node):
         msg.hardware = hardware_msg
         self.publisher.publish(msg)
         rclpy.spin_once(self)
+
+    def speed_checker(self):
+        last_location=self.current_location
+        self.update_pose_robot()
+        self.current_location=(self.robot_position, time.time())
+        distance = self.distance(last_location[0],self.current_location[0])
+        tim = self.current_location[1]- last_location[1]
+        speed = distance/tim
+        self.speed_over_time.append([speed,self.speed_over_time[-1][1]+tim])
+
+    def plot_speed_over_time(self):
+        speed = [i[0] for i in self.speed_over_time]
+        time  = [i[1] for i in self.speed_over_time]
+        plt.plot(time, speed, color='blue')
+        plt.xlabel('Time (in sec)')
+        plt.ylabel('Speed (in m/s)')
+
+        average_speed= round(sum(speed)/len(speed),1)
+        total_time= round(time[-1],1)
+        distance = round(sum(speed)/len(speed)*time[-1],1)
+        title= "Robot %i Path | Distance: %.1lfm | Time: %.1lfs | Average Speed: %.1lfm/s" % (self.id, distance, total_time, average_speed)
+        plt.title(title)
+
+        plt.show()
+

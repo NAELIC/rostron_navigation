@@ -43,6 +43,9 @@ class RobotNavigation(Node):
         msg_handle.succeed()
 
         result = Behavior.Result()
+
+        robot.plot_speed_over_time() # speed checker with matplotlib
+
         return result
 
         pass
