@@ -67,4 +67,8 @@ class AStar():
     def run(self):
         route = self.astar( self.grid, self.start_pose, self.final_pose)
         route = route[::-1]
+        # TEST delete first points of a*
+        if len(route)>3:
+            del route[0]
+            del route[1]
         return route

@@ -1,10 +1,11 @@
 import math
-from math import sin, cos
+from math import sin, cos, sqrt
 import matplotlib.pyplot as plt 
 import numpy as np
 import time
 
 import rclpy
+from rclpy.qos import ReliabilityPolicy
 from rostron_interfaces.msg import Order, Hardware
 from geometry_msgs.msg import Twist
 from rostron_interfaces.action import MoveTo
@@ -49,6 +50,7 @@ class MoveToStrategie(Node):
         self.rviz = False
         self.current_location=(self.robot_position, time.time())
         self.speed_over_time=[[0.0,0.0]] #  [[speed,time],...]
+        self.accel_max = 0.0 # according to the distance to the final point
         World().init(self)
 
     def update_pose_robot(self):
@@ -79,11 +81,26 @@ class MoveToStrategie(Node):
                                        self.theta_to_vector(theta))
         return 1 if angle > 0 else -1
 
-    def speed_multiplier(self, arrival_pose):
-        distance = 2*self.distance(arrival_pose, self.robot_position)
-        distance = max(distance, 1.0)
-        distance = min(distance, 6.0)
-        return distance
+    def speed_acceleration_vector(self, vector):
+        """Return the speed of acceleration of a vector (x,y)"""
+        return math.hypot(vector[0],vector[1])
+
+    def check_acceleration_max(self, arrival_pose):
+        """Update the acceleration max according to distance to goal"""
+        distance = self.distance(arrival_pose, self.robot_position)
+        if (distance>1):
+            self.accel_max=1.0
+        else :
+            self.accel_max = distance     
+
+    def max_acceleration_vector(self, vector):
+        """Return the biggest vector where vector speed close to accel_max"""
+        initial_vector = vector
+        accel_multiplier = 1.0
+        while self.speed_acceleration_vector(vector) < self.accel_max:
+            vector = (initial_vector[0]*accel_multiplier,initial_vector[1]*accel_multiplier)
+            accel_multiplier= accel_multiplier +0.1
+        return vector
 
     def move_by(self, path, orientation_goal, dribble=False):
         """Move to the last pose of the path going through all poses"""
@@ -102,8 +119,11 @@ class MoveToStrategie(Node):
                 vecteur = self.matrice_rotation(
                     vecteur, self.robot_orientation)
                 vel_msg = Twist()
-                vel_msg.linear.x = vecteur[0] * self.speed_multiplier(path[-1])
-                vel_msg.linear.y = vecteur[1] * self.speed_multiplier(path[-1])
+
+                self.check_acceleration_max(path[-1])
+                vecteur = self.max_acceleration_vector(vecteur)
+                vel_msg.linear.x = vecteur[0]
+                vel_msg.linear.y = vecteur[1]
 
                 if abs(self.robot_orientation-orientation_goal) > 0.1:
                     vel_msg.angular.z = sign*0.8
