@@ -2,12 +2,13 @@ import math
 import numpy as np
 import time
 
-from rostron_interfaces.action import MoveTo
 from rostron_utils.world import World
+
+from geometry_msgs.msg import Point
 
 class PathFinder():
 
-    def __init__(self, id: int, goal : MoveTo.Goal) -> None:
+    def __init__(self, id: int, goal : tuple) -> None:
         self.resolution = 0.1
         self.margin = 2*2
         self.width = World().field.width
@@ -24,9 +25,14 @@ class PathFinder():
         grid = np.zeros((self.y_, self.x_))
         
         # Obstacles
+        # TODO : Error, allies is not to 0-6 but to 0-15 !!
         for i in range(6):
+            World().node_.get_logger().info("test finish 21")
+
             posA = self.pose_to_grid(World().allies[i].pose.position)
             posO = self.pose_to_grid(World().opponents[i].pose.position)
+            World().node_.get_logger().info("test finish 22")
+
             if self.id_ != i :
                 grid[posA[0]][posA[1]]=1
             grid[posO[0]][posO[1]]=1        
@@ -43,7 +49,7 @@ class PathFinder():
         """ Return the grid in a 1D array"""
         return (self.create_grid()).flatten()
 
-    def pose_to_grid(self,position) -> tuple:
+    def pose_to_grid(self, position) -> tuple:
         """Transposes a real position to a position on the grid"""
         return ( math.floor(((position.x + self.length/2)/self.resolution)+self.margin/2), 
                 math.floor(-((position.y - self.width/2)/self.resolution)+self.margin/2))
@@ -60,8 +66,15 @@ class PathFinder():
         start_time = time.time()
         grid = self.create_grid()
         start = self.pose_to_grid(World().allies[self.id_].pose.position)
-        goal = self.pose_to_grid(self.goal_.position)
-        path_finding = path_finding_class(grid,start,goal)
+
+        point = Point()
+        point.x = self.goal_[0]
+        point.y = self.goal_[1]
+
+        goal = self.pose_to_grid(point)
+
+
+        path_finding = path_finding_class(grid,start, goal)
         path = path_finding.run()
         for i in range(len(path)):
             path[i] = self.grid_to_pose(path[i])

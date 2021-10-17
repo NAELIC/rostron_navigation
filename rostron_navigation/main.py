@@ -1,4 +1,4 @@
-from rostron_navigation.primitive.move_to import MoveToStrategie
+from rostron_navigation.primitive.move_to import MoveTo
 import rclpy
 from rclpy.action.server import ServerGoalHandle
 from rclpy.node import Node
@@ -16,36 +16,34 @@ class RobotNavigation(Node):
         self.declare_parameter("id", 0)
         self.id = self.get_parameter("id").get_parameter_value().integer_value
 
-        # Change init to node !
+        # TODO : Change init to node !
         World().init(self)
 
-        # Create all action and service for the navigation system.
-        self.get_logger().info(
-            f"Init actions and service for robot {self.id}")
+        self.get_logger().info(f"Init navigation for robot {self.id}")
 
         self._action_server = ActionServer(
             self, Behavior, f"robot_{self.id}/behavior", self.new_behavior)
 
-        self.get_logger().info(
-            "Finish to init all action and service")
+        self.get_logger().info("Finish to init")
 
     def new_behavior(self, msg_handle: ServerGoalHandle):
         msg: Behavior.Goal = msg_handle.request
-        self.get_logger().info(msg.params)
-        self._logger.info(msg.name)
+
         params = json.loads(msg.params)
 
         self._logger.info(f"{params['x']}, {params['y']}, {params['theta']}")
-
-        robot = MoveToStrategie(self.id)
-        robot.move_to((params['x'], params['y']), params['theta'])
+        
+        # Move this in the behavior timer.
+        robot = MoveTo(self.id)
+        finish = False
+        while not(finish):
+            finish = robot.move_to((params['x'], params['y'], params['theta']))
 
         msg_handle.succeed()
 
         result = Behavior.Result()
-        return result
 
-        pass
+        return result
 
 
 def main():

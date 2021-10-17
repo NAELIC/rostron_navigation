@@ -7,13 +7,12 @@
 from typing import Any
 import numpy as np
 import heapq
-import time
 from rostron_utils.world import World
 
  
 class AStar():
 
-    def __init__(self, grid: Any,start_pose: tuple, final_pose : tuple) -> None:
+    def __init__(self, grid: Any, start_pose: tuple, final_pose : tuple) -> None:
         self.grid = grid
         self.start_pose = start_pose
         self.final_pose = final_pose
@@ -66,5 +65,6 @@ class AStar():
     
     def run(self):
         route = self.astar( self.grid, self.start_pose, self.final_pose)
+        World().node_.get_logger().info("test")
         route = route[::-1]
         return route
