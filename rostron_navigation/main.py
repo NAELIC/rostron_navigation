@@ -13,6 +13,7 @@ import json
 class RobotNavigation(Node):
     def __init__(self) -> None:
         super().__init__("navigation")
+
         self.declare_parameter("id", 0)
         self.id = self.get_parameter("id").get_parameter_value().integer_value
 
@@ -27,24 +28,23 @@ class RobotNavigation(Node):
         self.get_logger().info("Finish to init")
 
     def new_behavior(self, msg_handle: ServerGoalHandle):
+        World().node_.get_logger().info("resr")
+
         msg: Behavior.Goal = msg_handle.request
 
-        params = json.loads(msg.params)
-
-        self._logger.info(f"{params['x']}, {params['y']}, {params['theta']}")
+        if msg.name == "move_to":
+            params = json.loads(msg.params)
+            self._logger.info(f" Move To - {params['x']}, {params['y']}, {params['theta']}")
         
-        # Move this in the behavior timer.
-        robot = MoveTo(self.id)
-        finish = False
-        while not(finish):
-            finish = robot.move_to((params['x'], params['y'], params['theta']))
+            # Move this in the behavior timer.
+            robot = MoveTo(self.id)
+            finish = False
+            while not(finish):
+                finish = robot.run((params['x'], params['y'], params['theta']))
 
         msg_handle.succeed()
 
-        result = Behavior.Result()
-
-        return result
-
+        return Behavior.Result()
 
 def main():
     rclpy.init()

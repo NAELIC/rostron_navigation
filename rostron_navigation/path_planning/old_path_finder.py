@@ -10,7 +10,7 @@ class PathFinder():
 
     def __init__(self, id: int, goal : tuple) -> None:
         self.resolution = 0.1
-        self.margin = 2*2
+        self.margin = 4
         self.width = World().field.width
         self.length = World().field.length
 

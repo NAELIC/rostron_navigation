@@ -1,70 +1,87 @@
-##############################################################################
+from rostron_interfaces.msg import Robot
 
-# source : https://www.analytics-link.com/post/2018/09/14/applying-the-a-path-finding-algorithm-in-python-part-1-2d-square-grid 
-
-##############################################################################
-
-from typing import Any
-import numpy as np
-import heapq
 from rostron_utils.world import World
 
- 
+from geometry_msgs.msg import Pose2D
+
+import numpy as np
+import math
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 class AStar():
+    resolution = 0.1
+    max_robots = 16
 
-    def __init__(self, grid: Any, start_pose: tuple, final_pose : tuple) -> None:
-        self.grid = grid
-        self.start_pose = start_pose
-        self.final_pose = final_pose
+    def __init__(self):
+        # Get width, height and add a margin
+        self.width = World().field.width + 1.0
+        self.length = World().field.length + 1.0
+        self.xlen_ = math.ceil(self.length / self.resolution)
+        self.ylen_ = math.ceil(self.width / self.resolution)
 
-    def heuristic(self, a, b):
-        return np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
+    def grid_to_coord(self, i, j):
+        x = i * self.resolution - (self.length / 2.0)
+        y = j * self.resolution - (self.width / 2.0)
+        return ( int(x), int(y))
 
+    def coord_to_grid(self, x, y):
+        i = (x + (self.length / 2.0)) / self.resolution
+        j = (y + (self.width / 2.0)) / self.resolution
+        return (int(i), int(j))
 
-    def astar(self, array, start, goal):
-        neighbors = [(0,1),(0,-1),(1,0),(-1,0),(1,1),(1,-1),(-1,1),(-1,-1)]
-        close_set = set()
-        came_from = {}
-        gscore = {start:0}
-        fscore = {start:self.heuristic(start, goal)}
-        oheap = []
-        heapq.heappush(oheap, (fscore[start], start))
-    
-        while oheap:
-            current = heapq.heappop(oheap)[1]
-            if current == goal:
-                data = []
-                while current in came_from:
-                    data.append(current)
-                    current = came_from[current]
-                return data
-            close_set.add(current)
-            for i, j in neighbors:
-                neighbor = current[0] + i, current[1] + j
-                tentative_g_score = gscore[current] + self.heuristic(current, neighbor)
-                if 0 <= neighbor[0] < array.shape[0]:
-                    if 0 <= neighbor[1] < array.shape[1]:                
-                        if array[neighbor[0]][neighbor[1]] == 1:
-                            continue
-                    else:
-                        # array bound y walls
-                        continue
-                else:
-                    # array bound x walls
-                    continue
+    def run(self, id: int, debug : bool = False):
+        # Initialize the grid
+        World().node_.get_logger().info("Grid - creation")
+        grid = np.zeros((self.xlen_, self.ylen_))
 
-                if neighbor in close_set and tentative_g_score >= gscore.get(neighbor, 0):
-                    continue
-    
-                if  tentative_g_score < gscore.get(neighbor, 0) or neighbor not in [i[1]for i in oheap]:
-                    came_from[neighbor] = current
-                    gscore[neighbor] = tentative_g_score
-                    fscore[neighbor] = tentative_g_score + self.heuristic(neighbor, goal)
-                    heapq.heappush(oheap, (fscore[neighbor], neighbor))
-        return False
-    
-    def run(self):
-        route = self.astar( self.grid, self.start_pose, self.final_pose)
-        World().node_.get_logger().info("test")
-        route = route[::-1]
-        return route
+        World().node_.get_logger().info(f"{ self.xlen_} x {self.ylen_}")
+
+        World().node_.get_logger().info("Grid - filling")
+        for i in range(6):
+            posA = self.coord_to_grid(World().allies[i].pose.position.x, World().allies[i].pose.position.y)
+            posO = self.coord_to_grid(World().opponents[i].pose.position.x, World().opponents[i].pose.position.y)
+            World().node_.get_logger().info("test finish 22")
+
+            if id != i :
+                grid[posA[0], posA[1]] =1
+            grid[posO[0], posO[1]]=1        
+            World().node_.get_logger().info("test finish 23")
+
+            adjacent_squares=[(0,0),(0,1),(1,0),(-1,0),(0,-1),(-1,-1),(1,1),(-1,1),(1,-1),(0,-2),(0,2),
+            (-2,0),(2,0),(2,-1),(2,1),(-2,1),(-2,-1),(-1,-2),(1,-2),(1,-2),(-1,2),(1,2)]
+            for adjacent in adjacent_squares:
+                if id != i :
+                    grid[posA[0]+adjacent[0], posA[1]+adjacent[1]]=1
+                grid[posO[0]+adjacent[0], posO[1]+adjacent[1]] = 1
+        # for i in range(grid.shape[0]):
+        #     for j in range(grid.shape[1]):
+        #         pos = self.grid_to_coord(i, j)
+
+        #         for r_id in range(16):
+        #             r_ally: Robot = World().allies[r_id]
+
+        #             if r_ally.id != id and r_ally.active == True:
+        #                 r_pos = np.array((r_ally.pose.position.x, r_ally.pose.position.y))
+                        
+        #                 dist = np.linalg.norm(r_pos - np.array(pos))
+
+        #                 if dist > self.resolution:
+        #                     grid[i, j] = max(grid[i, j], 10.0 / (dist / self.resolution))
+
+        #             r_opp: Robot = World().opponents[r_id]
+        #             if r_opp.active == True:
+        #                 r_pos = np.array((r_ally.pose.position.x, r_ally.pose.position.y))
+        #                 dist = np.linalg.norm(r_pos - np.array(pos))
+
+        #                 if dist > self.resolution:
+        #                     grid[i, j] = max(grid[i, j], 10.0 / (dist / self.resolution))
+
+                                
+        if debug:
+            self.print_heatmap(grid)
+
+    def print_heatmap(self, grid):
+        sns.set_theme()
+        sns.heatmap(grid)
+        plt.show()
