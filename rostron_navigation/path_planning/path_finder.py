@@ -75,6 +75,6 @@ class PathFinder():
         path = path_finding.run()
         for i in range(len(path)):
             path[i] = self.grid_to_pose(path[i])
-        World().node_.get_logger().info('[PATH] - Generation Time : %.2lf ms' % (
-            round((time.time()-start_time)*1000,2)))
+        # World().node_.get_logger().info('[PATH] - Generation Time : %.2lf ms' % (round((time.time()-start_time)*1000,2)))
+        path.append((self.goal_[0],self.goal_[1])) # goal pose disappear after Astar
         return path

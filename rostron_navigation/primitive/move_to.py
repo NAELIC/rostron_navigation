@@ -103,22 +103,8 @@ class MoveTo():
             accel_multiplier= accel_multiplier +0.1
         return vector
 
-    def stop_robot(self, goal_orientation):
-        """Give at the robot a nullable velocity when there is the right orientation"""
-        
-        """
-        sign = self.closest_angle(goal_orientation)
-        # if orientation not finished
-        while abs(self.robot_orientation-goal_orientation) > 0.1:
-            self.update_pose_robot()
-            vel_msg = Twist()
-            vel_msg.angular.z = sign*1.0
-            msg = Order()
-            msg.id = self.id
-            msg.velocity = vel_msg
-            self.publisher.publish(msg)
-            rclpy.spin_once(self)
-        """
+    def stop_robot(self):
+        """Give at the robot a nullable velocity when there is the right orientation"""     
         control = Order()
         control.id = self.id
         control.velocity = Twist()
@@ -126,8 +112,6 @@ class MoveTo():
         msg = Orders()
         msg.orders.append(control)
         self.publisher.publish(msg)
-        # rclpy.spin_once(self.node)
-        World().node_.get_logger().info('[MOVETO] - Goal Achieved !')
 
     def move_to(self, pose: tuple) -> bool:
         # TODO : Move PathFinder and A* in the same class
@@ -166,17 +150,35 @@ class MoveTo():
 
 
                 control.velocity = vel_msg
-                """
+                
                 if abs(robot_orientation - pose[2]) > 0.1:
-                    vel_msg.angular.z = sign*0.8
-                """
+                    vel_msg.angular.z = sign*1.0
+                else :
+                    vel_msg.angular.z = 0 
+                
                 msg = Orders()
                 msg.orders.append(control)
                 self.publisher.publish(msg)
-
+                
                 rclpy.spin_once(self.node) # How to replace ?
-        self.stop_robot(0.0)
 
+        # Finish the orientation if needed
+        robot_orientation = World().allies[self.id].pose.orientation.z
+        while abs(robot_orientation - pose[2]) > 0.1:
+            robot_orientation = World().allies[self.id].pose.orientation.z
+            sign = self.closest_angle(pose[2])
+            control = Order()
+            control.id = self.id
+            vel_msg = Twist()
+            vel_msg.angular.z = sign*1.0
+            control.velocity = vel_msg
+            msg = Orders()
+            msg.orders.append(control)
+            self.publisher.publish(msg)    
+            rclpy.spin_once(self.node) # How to replace ?
+        self.stop_robot()
+
+        World().node_.get_logger().info('[MOVETO] - Goal Achieved !')
         return False
 
     def speed_checker(self):
