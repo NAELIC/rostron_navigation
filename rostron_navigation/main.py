@@ -9,7 +9,6 @@ from rostron_interfaces.action import Behavior
 
 import json
 
-
 class RobotNavigation(Node):
     def __init__(self) -> None:
         super().__init__("navigation")
