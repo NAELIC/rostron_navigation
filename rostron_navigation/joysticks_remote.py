@@ -6,9 +6,15 @@ import threading
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-from rostron_interfaces.msg import Commands, Command
+from rostron_interfaces.msg import Commands, Command, Hardware
 
-speed_multiplier = 10.0
+speed_multiplier = 6.0
+
+########################################################
+
+##### TODO : Resolve the problem of the dribbler   #####
+
+########################################################
 
 class Joysticks(Node):
     def __init__(self, id: int):
@@ -52,7 +58,7 @@ class Joysticks(Node):
         # 4: Right Analog Vertical 2: Left Trigger, 5: Right Trigger
         self.analog_keys = {0:0, 1:0, 2:0, 3:0, 4:-1, 5:-1}
 
-        LEFT, RIGHT, UP, DOWN, ROTATE_LEFT, ROTATE_RIGHT, KICK = False, False, False, False, False, False, False
+        LEFT, RIGHT, UP, DOWN, ROTATE_LEFT, ROTATE_RIGHT, FLAT_KICK, CHIP_KICK, DRIBBLER = False, False, False, False, False, False, False, False, False
         canvas.fill((255,255,255))
         pygame.draw.rect(canvas, (0,0 + color,255), player)
         window.blit(canvas, (0,0))
@@ -92,32 +98,47 @@ class Joysticks(Node):
 
                 # HANDLES BUTTON PRESSES
                 if event.type == pygame.JOYBUTTONDOWN:
-                    if event.button == button_keys['left_arrow']:
-                        LEFT = True
-                    if event.button == button_keys['right_arrow']:
-                        RIGHT = True
-                    if event.button == button_keys['down_arrow']:
-                        DOWN = True
-                    if event.button == button_keys['up_arrow']:
+                    if event.button == button_keys['left_stick_click']:
                         UP = True
+                    if event.button == button_keys['right_stick_click']:
+                        DOWN = True
                     if event.button == button_keys['circle']:
-                        KICK = True
+                        FLAT_KICK = True
+                    if event.button == button_keys['square']:
+                        CHIP_KICK = True
+                    if event.button == button_keys['triangle']:
+                        if DRIBBLER == False :
+                            DRIBBLER = True
+                        else :
+                            DRIBBLER = False
+                    if event.button == button_keys['L1']:
+                        print("Previous player!")
+                        if self.id > 0 :
+                            self.id -= 1
+                        else :
+                            self.id = 5
+                        print("Player " + str(self.id) + " selected!")
+                    if event.button == button_keys['R1']:
+                        print("Next player!")
+                        if self.id < 5 :
+                            self.id += 1
+                        else :
+                            self.id = 0
+                        print("Player " + str(self.id) + " selected!")
                     if event.button == button_keys['x']:
-                        UP, DOWN, LEFT, RIGHT, ROTATE_LEFT, ROTATE_RIGHT, KICK = False, False, False, False, False, False, False  
+                        UP, DOWN, LEFT, RIGHT, ROTATE_LEFT, ROTATE_RIGHT, FLAT_KICK, CHIP_KICK, DRIBBLER = False, False, False, False, False, False, False, False, False  
                         print("Stop!")
 
                 # HANDLES BUTTON RELEASES
                 if event.type == pygame.JOYBUTTONUP:
-                    if event.button == button_keys['left_arrow']:
-                        LEFT = False
-                    if event.button == button_keys['right_arrow']:
-                        RIGHT = False
-                    if event.button == button_keys['down_arrow']:
-                        DOWN = False
-                    if event.button == button_keys['up_arrow']:
+                    if event.button == button_keys['left_stick_click']:
                         UP = False
+                    if event.button == button_keys['right_stick_click']:
+                        DOWN = False
                     if event.button == button_keys['circle']:
-                        KICK = False
+                        FLAT_KICK = False
+                    if event.button == button_keys['square']:
+                        CHIP_KICK = False
 
                 # HANDLES ANALOG INPUTS
                 if event.type == pygame.JOYAXISMOTION:
@@ -186,7 +207,7 @@ class Joysticks(Node):
             self.vel_y = 0.0
             self.vel_z = 0.0
 
-            # Handle Player movement
+            # Handle Player movements & actions
             if LEFT:
                 print("Go left!")
                 self.vel_y += speed_multiplier * max(self.analog_keys[0], 1/speed_multiplier)
@@ -219,8 +240,17 @@ class Joysticks(Node):
                 print("Rotate right!")
                 self.vel_z -= speed_multiplier * max(self.analog_keys[5], 1/speed_multiplier) / 2
             
-            if KICK:
-                print("Kick!")
+            if FLAT_KICK:
+                print("Flat kick!")
+                self.flat_kick()
+            
+            if CHIP_KICK:
+                print("Chip kick!")
+                self.chip_kick()
+            
+            if DRIBBLER:
+                print("Dribbler activated!")
+                self.catch_ball()
                 
             ################################# UPDATE WINDOW AND DISPLAY AND TIMER #################################
             canvas.fill((255,255,255))
@@ -245,6 +275,48 @@ class Joysticks(Node):
         plt.show()
     """
 
+    def flat_kick(self):
+        command = Command()
+        command.id = self.id
+
+        hardware = Hardware()
+        hardware.kick_power = 1.0
+        hardware.kick_type = Hardware.FLAT_KICK
+        command.hardware = hardware
+
+        msg = Commands()
+        msg.commands.append(command)
+        self.publisher.publish(msg)
+        # self.get_logger().info('Publishing: "{ commands : [{ id : %d , kick type: %s }]}"' % (msg.commands[0].id, hardware.kick_type))
+    
+    def chip_kick(self):
+        command = Command()
+        command.id = self.id
+
+        hardware = Hardware()
+        hardware.kick_power = 1.0
+        hardware.kick_type = Hardware.CHIP_KICK
+        command.hardware = hardware
+
+        msg = Commands()
+        msg.commands.append(command)
+        self.publisher.publish(msg)
+        # self.get_logger().info('Publishing: "{ commands : [{ id : %d , kick type: %s }]}"' % (msg.commands[0].id, hardware.kick_type))
+
+    def catch_ball(self):
+        command = Command()
+        command.id = self.id
+
+        hardware = Hardware()
+        hardware.kick_type = Hardware.NO_KICK
+        hardware._spin_power = 1.0
+        command.hardware = hardware
+
+        msg = Commands()
+        msg.commands.append(command)
+        self.publisher.publish(msg)
+        # self.get_logger().info('Publishing: "{ commands : [{ id : %d , kick type: %s }]}"' % (msg.commands[0].id, hardware.kick_type))
+
     def timer_callback(self):
         control = Command()
         control.velocity = Twist()
@@ -257,7 +329,7 @@ class Joysticks(Node):
         msg = Commands()
         msg.commands.append(control)
         self.publisher.publish(msg)
-        self.get_logger().info('Publishing: "{ commands : [{ id : %d , velocity: { linear: { x: %d, y: %d}, angular: { z: %d }}}]}"' % (msg.commands[0].id, msg.commands[0].velocity.linear.x, msg.commands[0].velocity.linear.y, msg.commands[0].velocity.angular.z))
+        # self.get_logger().info('Publishing: "{ commands : [{ id : %d , velocity: { linear: { x: %d, y: %d}, angular: { z: %d }}}]}"' % (msg.commands[0].id, msg.commands[0].velocity.linear.x, msg.commands[0].velocity.linear.y, msg.commands[0].velocity.angular.z))
 
 def main():
     rclpy.init()

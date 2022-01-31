@@ -10,9 +10,6 @@
   "share": 8,
   "options": 9,
   "PS": 10,
-  "up_arrow": 11,
-  "down_arrow": 12,
-  "left_arrow": 13,
-  "right_arrow": 14,
-  "touchpad": 15
+  "left_stick_click": 11,
+  "right_stick_click": 12
   }
