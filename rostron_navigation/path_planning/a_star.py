@@ -65,6 +65,5 @@ class AStar():
     
     def run(self):
         route = self.astar( self.grid, self.start_pose, self.final_pose)
-        World().node_.get_logger().info("test")
         route = route[::-1]
         return route

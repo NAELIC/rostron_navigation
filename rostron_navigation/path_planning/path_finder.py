@@ -27,11 +27,8 @@ class PathFinder():
         # Obstacles
         # TODO : Error, allies is not to 0-6 but to 0-15 !!
         for i in range(6):
-            World().node_.get_logger().info("test finish 21")
-
             posA = self.pose_to_grid(World().allies[i].pose.position)
             posO = self.pose_to_grid(World().opponents[i].pose.position)
-            World().node_.get_logger().info("test finish 22")
 
             if self.id_ != i :
                 grid[posA[0]][posA[1]]=1
@@ -78,6 +75,6 @@ class PathFinder():
         path = path_finding.run()
         for i in range(len(path)):
             path[i] = self.grid_to_pose(path[i])
-        World().node_.get_logger().info('[PATH] - Generation Time : %.2lf ms' % (
-            round((time.time()-start_time)*1000,2)))
+        # World().node_.get_logger().info('[PATH] - Generation Time : %.2lf ms' % (round((time.time()-start_time)*1000,2)))
+        path.append((self.goal_[0],self.goal_[1])) # goal pose disappear after Astar
         return path
