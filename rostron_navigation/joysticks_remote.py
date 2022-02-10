@@ -70,6 +70,7 @@ class Joysticks(Node):
         while running:
             ################################# CHECK PLAYER INPUT #################################
             for event in pygame.event.get():
+                # print(event)
                 if event.type == pygame.QUIT:
                     running = False
                     pygame.quit()
@@ -294,7 +295,7 @@ class Joysticks(Node):
         command.id = self.id
 
         hardware = Hardware()
-        hardware.kick_power = 1.0
+        hardware.kick_power = 0.8
         hardware.kick_type = Hardware.CHIP_KICK
         command.hardware = hardware
 
@@ -308,6 +309,7 @@ class Joysticks(Node):
         command.id = self.id
 
         hardware = Hardware()
+
         hardware.kick_type = Hardware.NO_KICK
         hardware._spin_power = 1.0
         command.hardware = hardware
@@ -315,6 +317,7 @@ class Joysticks(Node):
         msg = Commands()
         msg.commands.append(command)
         self.publisher.publish(msg)
+        self.timer_callback()
         # self.get_logger().info('Publishing: "{ commands : [{ id : %d , kick type: %s }]}"' % (msg.commands[0].id, hardware.kick_type))
 
     def timer_callback(self):
